@@ -1,5 +1,5 @@
 // Package scaleway implements a DNS provider for solving the DNS-01 challenge using Scaleway Domains API.
-// Selectel Domain API reference: https://developers.scaleway.com/en/products/domain/api/
+// Scaleway Domain API reference: https://developers.scaleway.com/en/products/domain/api/
 // Token: https://www.scaleway.com/en/docs/generate-an-api-token/
 package scaleway
 
@@ -14,9 +14,11 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://api.scaleway.com"
-	defaultVersion = "v2alpha2"
-	minTTL         = 60
+	defaultBaseURL            = "https://api.scaleway.com"
+	defaultVersion            = "v2alpha2"
+	minTTL                    = 60
+	defaultpollingInterval    = 10 * time.Second
+	defaultpropagationTimeout = 120 * time.Second
 )
 
 const (
@@ -45,8 +47,8 @@ func NewDefaultConfig() *Config {
 		BaseURL:            env.GetOrDefaultString(baseURLEnvVar, defaultBaseURL),
 		Version:            env.GetOrDefaultString(apiVersionEnvVar, defaultVersion),
 		TTL:                env.GetOrDefaultInt(ttlEnvVar, minTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(propagationTimeoutEnvVar, 120*time.Second),
-		PollingInterval:    env.GetOrDefaultSecond(pollingIntervalEnvVar, 10*time.Second),
+		PropagationTimeout: env.GetOrDefaultSecond(propagationTimeoutEnvVar, defaultpropagationTimeout),
+		PollingInterval:    env.GetOrDefaultSecond(pollingIntervalEnvVar, defaultpollingInterval),
 	}
 }
 
@@ -56,8 +58,8 @@ type DNSProvider struct {
 	client *internal.Client
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Selectel Domains API.
-// API token must be passed in the environment variable SELECTEL_API_TOKEN.
+// NewDNSProvider returns a DNSProvider instance configured for Scaleway Domains API.
+// API token must be passed in the environment variable SCALEWAY_API_TOKEN.
 func NewDNSProvider() (*DNSProvider, error) {
 	values, err := env.Get(apiTokenEnvVar)
 	if err != nil {
@@ -70,7 +72,7 @@ func NewDNSProvider() (*DNSProvider, error) {
 	return NewDNSProviderConfig(config)
 }
 
-// NewDNSProviderConfig return a DNSProvider instance configured for selectel.
+// NewDNSProviderConfig return a DNSProvider instance configured for scaleway.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
 	if config == nil {
 		return nil, errors.New("scaleway: the configuration of the DNS provider is nil")

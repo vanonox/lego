@@ -5,14 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-acme/lego/v3/platform/tester"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vanonox/lego/platform/tester"
 )
 
-var envTest = tester.NewEnvTest(apiTokenEnvVar, ttlEnvVar)
+const (
+	cleanUpDelay = 2 * time.Second
+)
 
 func TestNewDNSProvider(t *testing.T) {
+	var envTest = tester.NewEnvTest(apiTokenEnvVar, ttlEnvVar)
+
 	testCases := []struct {
 		desc     string
 		envVars  map[string]string
@@ -64,12 +68,12 @@ func TestNewDNSProviderConfig(t *testing.T) {
 		{
 			desc:  "success",
 			token: "123",
-			ttl:   60,
+			ttl:   minTTL,
 		},
 		{
 			desc:     "missing api key",
 			token:    "",
-			ttl:      60,
+			ttl:      minTTL,
 			expected: "scaleway: credentials missing",
 		},
 	}
@@ -95,6 +99,8 @@ func TestNewDNSProviderConfig(t *testing.T) {
 }
 
 func TestLivePresent(t *testing.T) {
+	var envTest = tester.NewEnvTest(apiTokenEnvVar, ttlEnvVar)
+
 	if !envTest.IsLiveTest() {
 		t.Skip("skipping live test")
 	}
@@ -108,6 +114,8 @@ func TestLivePresent(t *testing.T) {
 }
 
 func TestLiveCleanUp(t *testing.T) {
+	var envTest = tester.NewEnvTest(apiTokenEnvVar, ttlEnvVar)
+
 	if !envTest.IsLiveTest() {
 		t.Skip("skipping live test")
 	}
@@ -116,7 +124,7 @@ func TestLiveCleanUp(t *testing.T) {
 	provider, err := NewDNSProvider()
 	require.NoError(t, err)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(cleanUpDelay)
 
 	err = provider.CleanUp(envTest.GetDomain(), "", "123d==")
 	require.NoError(t, err)

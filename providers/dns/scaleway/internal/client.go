@@ -45,7 +45,7 @@ type RecordChangeSet struct {
 	Records []*Record `json:"records,omitempty"`
 }
 
-// RecordChangeDelete represents a lit of delete operations.
+// RecordChangeDelete represents a list of delete operations.
 type RecordChangeDelete struct {
 	Data string `json:"data,omitempty"`
 	Name string `json:"name,omitempty"`
@@ -74,10 +74,13 @@ type Client struct {
 
 // NewClient returns a client instance.
 func NewClient(opts ClientOpts) *Client {
-
+	var baseURL = defaultEndpoint
+	if opts.BaseURL != "" {
+		baseURL = opts.BaseURL
+	}
 	return &Client{
 		token:      opts.Token,
-		baseURL:    opts.BaseURL,
+		baseURL:    baseURL,
 		httpClient: &http.Client{},
 	}
 }
@@ -98,7 +101,7 @@ func (c *Client) AddRecord(zone string, record Record) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.do(req, nil)
+	err = c.do(req, nil)
 	return err
 }
 
@@ -120,7 +123,7 @@ func (c *Client) SetRecord(zone string, record Record) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.do(req, nil)
+	err = c.do(req, nil)
 	return err
 }
 
@@ -142,7 +145,7 @@ func (c *Client) DeleteRecord(zone string, record Record) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.do(req, nil)
+	err = c.do(req, nil)
 	return err
 }
 
@@ -168,24 +171,24 @@ func (c *Client) newRequest(method, uri string, body interface{}) (*http.Request
 	return req, nil
 }
 
-func (c *Client) do(req *http.Request, to interface{}) (*http.Response, error) {
+func (c *Client) do(req *http.Request, to interface{}) error {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed with error: %v", err)
+		return fmt.Errorf("request failed with error: %v", err)
 	}
 
 	err = checkResponse(resp)
 	if err != nil {
-		return resp, err
+		return err
 	}
 
 	if to != nil {
 		if err = unmarshalBody(resp, to); err != nil {
-			return resp, err
+			return err
 		}
 	}
 
-	return resp, nil
+	return nil
 }
 
 func checkResponse(resp *http.Response) error {
